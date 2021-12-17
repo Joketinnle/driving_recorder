@@ -18,7 +18,6 @@ void app_main(void)
 	while (1) 
 	{
 		vTaskDelay(10000 / portTICK_PERIOD_MS);
-		printf("main\r\n");
 	}
 }
 
