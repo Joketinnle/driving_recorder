@@ -18,7 +18,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 
-#include "softap_task.h"
+#include "app_softap.h"
 
 /* The examples use WiFi configuration that you can set via project configuration menu.
 
@@ -83,21 +83,17 @@ void wifi_init_softap(void)
              EXAMPLE_ESP_WIFI_SSID, EXAMPLE_ESP_WIFI_PASS, EXAMPLE_ESP_WIFI_CHANNEL);
 }
 
-void softap_task(void *pvParameters)
+void app_wifi_main()
 {
-    //Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK(ret);
+	//Initialize NVS
+	esp_err_t ret = nvs_flash_init();
+	if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+		ESP_ERROR_CHECK(nvs_flash_erase());
+		ret = nvs_flash_init();
+	}
+	ESP_ERROR_CHECK(ret);
 
-    ESP_LOGI(TAG, "ESP_WIFI_MODE_AP");
-    wifi_init_softap();
-    while (1)
-    {
-        vTaskDelay(10000 / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "free heap size:%d\n", esp_get_free_heap_size());
-    }
+	ESP_LOGI(TAG, "ESP_WIFI_MODE_AP");
+	wifi_init_softap();
 }
+

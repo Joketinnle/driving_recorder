@@ -1,5 +1,5 @@
-#ifndef __SOFTAP_TASK_H_
-#define __SOFTAP_TASK_H_
+#ifndef __APP_SOFTAP_H_
+#define __APP_SOFTAP_H_
 
 
 #include "freertos/FreeRTOS.h"
@@ -8,10 +8,7 @@
 
 
 
-
-
-void softap_task(void *pvParameters);
-
+void app_wifi_main();
 
 
 #endif

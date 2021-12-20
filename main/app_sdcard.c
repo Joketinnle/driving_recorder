@@ -33,8 +33,6 @@ CONDITIONS OF ANY KIND, either express or implied.
 #include "esp_vfs_fat.h"
 #include "vfs_fat_internal.h"
 #include "driver/sdspi_host.h"
-#include "sdmmc_cmd.h"
-#include "diskio_impl.h"
 #include "diskio_sdmmc.h"
 #include "soc/soc_caps.h"
 #include "driver/sdmmc_defs.h"
@@ -42,7 +40,7 @@ CONDITIONS OF ANY KIND, either express or implied.
 
 
 
-#include "sdcard_task.h"
+#include "app_sdcard.h"
 
 static const char *TAG = "sdcard_task";
 
@@ -304,14 +302,7 @@ cleanup:
 
 }
 
-
-
-
-
-
-
-
-void sdcard_task(void *pvParameters)
+void app_sdcard_main()
 {
 	esp_err_t ret;
 
@@ -437,18 +428,10 @@ void sdcard_task(void *pvParameters)
 	}
 	ESP_LOGI(TAG, "Read from file: '%s'", line);
 
-	vTaskDelay(10000 / portTICK_PERIOD_MS);
-
 	// All done, unmount partition and disable SDMMC peripheral
 	esp_vfs_fat_sdcard_unmount(mount_point, card);
 	ESP_LOGI(TAG, "Card unmounted");
 
 
-	// sdcard_format(mount_point, &host, &slot_config, &mount_config, &card);
-	// esp_vfs_fat_sdcard_unmount(mount_point, card);
-
-	for (;;)
-	{
-		vTaskDelay(10000 / portTICK_PERIOD_MS);
-	}
 }
+

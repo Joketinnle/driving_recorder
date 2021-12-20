@@ -1,4 +1,5 @@
 idf_component_register(SRCS 	"main.c"
-								"softap_task.c"
-								"sdcard_task.c"
+								"app_softap.c"
+								"app_sdcard.c"
+								"app_camera.c"
 					INCLUDE_DIRS ".")

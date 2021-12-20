@@ -1,0 +1,6 @@
+{
+	"files.associations": {
+		"unistd.h": "c",
+		"softap_task.h": "c"
+	}
+}
