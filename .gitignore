@@ -1246,3 +1246,4 @@ build/esp-idf/xtensa/CMakeFiles/__idf_xtensa.dir/trax.c.obj
 build/esp-idf/xtensa/CMakeFiles/__idf_xtensa.dir/esp32/trax_init.c.obj
 build/partition_table/partition-table.bin
 sdkconfig.old
+build/esp-idf/main/CMakeFiles/__idf_main.dir/sdcard_task.c.obj

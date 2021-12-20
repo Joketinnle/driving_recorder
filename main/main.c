@@ -4,7 +4,7 @@
 #include "freertos/task.h"
 
 #include "softap_task.h"
-
+#include "sdcard_task.h"
 
 
 
@@ -13,7 +13,8 @@
 
 void app_main(void)
 {
-	xTaskCreate(softap_task, "softap_task", 4096, NULL, 2, NULL);
+	xTaskCreate(softap_task, "softap_task", 4096, NULL, 3, NULL);
+	xTaskCreate(sdcard_task, "sdcard_task", 8192, NULL, 3, NULL);
 
 	while (1) 
 	{
