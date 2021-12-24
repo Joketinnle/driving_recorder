@@ -28,7 +28,7 @@ static void write_index_chunk(FILE *fp)
 
     list_for_each_safe(slider, tmpslider, &list)
     {
-        unsigned char tmp[4] = {'0', '0', 'd', 'c'};  //00dc = 压缩的视频数据
+        unsigned char tmp[4] = {'0', '0', 'd', 'b'};  //00dc = 压缩的视频数据
         unsigned int keyframe = 0x10;                 //0x10表示当前帧为关键帧
         struct ListNode *node = list_entry(slider, struct ListNode, head);
 
@@ -48,7 +48,7 @@ static void back_fill_data(FILE *fp, int width, int height, int fps)
     AVI_RIFF_HEAD riff_head =
     {
         {'R', 'I', 'F', 'F'},
-        4 + sizeof(AVI_HDRL_LIST) + sizeof(AVI_LIST_HEAD) + nframes * 8 + totalsize,
+        4 + sizeof(AVI_HDRL_LIST) + sizeof(AVI_LIST_HEAD) + sizeof(ODML_EXTENDED_AVI_HEADER) + nframes * 8 + totalsize,
         {'A', 'V', 'I', ' '}
     };
 
@@ -60,7 +60,7 @@ static void back_fill_data(FILE *fp, int width, int height, int fps)
         {
             {'a', 'v', 'i', 'h'},
             sizeof(AVI_AVIH_CHUNK) - 8,
-            1000000 / fps, 25000, 0, 0, nframes, 0, 1, 100000, width, height,
+            1000000 / fps, 70000, 0, 16, nframes, 0, 1, 100000, width, height,
             {0, 0, 0, 0}
         },
         {
@@ -71,20 +71,30 @@ static void back_fill_data(FILE *fp, int width, int height, int fps)
                 {'s', 't', 'r', 'h'},
                 sizeof(AVI_STRH_CHUNK) - 8,
                 {'v', 'i', 'd', 's'},
-                {'J', 'P', 'E', 'G'},
-                0, 0, 0, 0, 1, 23, 0, nframes, 100000, 0xFFFFFF, 0,
-                {0, 0, width, height}
+                {'M', 'J', 'P', 'G'},
+                0, 0, 0, 0, 1, 24, 0, nframes, 100000, 0, 0
+                // {0, 0, width, height}
             },
             {
                 {'s', 't', 'r', 'f'},
                 sizeof(AVI_STRF_CHUNK) - 8,
                 sizeof(AVI_STRF_CHUNK) - 8,
                 width, height, 1, 24,
-                {'J', 'P', 'E', 'G'},
+                {'M', 'J', 'P', 'G'},
                 width * height * 3, 0, 0, 0, 0
             }
         }
     };
+
+	ODML_EXTENDED_AVI_HEADER odml_list_head =
+	{
+		{'L', 'I', 'S', 'T'},
+		16,
+		{'o', 'd', 'm', 'l'},
+		{'d', 'm', 'l', 'h'},
+		4,
+		nframes
+	};
 
     AVI_LIST_HEAD movi_list_head =
     {
@@ -118,7 +128,7 @@ void jpeg2avi_start(FILE *fp)
 
 void jpeg2avi_add_frame(FILE *fp, void *data, unsigned int len)
 {
-    unsigned char tmp[4] = {'0', '0', 'd', 'c'};  //00dc = 压缩的视频数据
+    unsigned char tmp[4] = {'0', '0', 'd', 'b'};  //00dc = 压缩的视频数据
     struct ListNode *node = (struct ListNode *)malloc(sizeof(struct ListNode));
 
     /*JPEG图像大小4字节对齐*/

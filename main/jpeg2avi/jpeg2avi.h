@@ -14,6 +14,17 @@ typedef struct avi_riff_head
     unsigned char type[4];
 }AVI_RIFF_HEAD, AVI_LIST_HEAD;
 
+typedef struct odml_extended_avi_header
+{
+	unsigned char id[4];
+	unsigned int size;
+	unsigned char odml_name[4];
+	unsigned char dmlh_name[4];
+	unsigned int dmlh_size;
+	unsigned int total_frame;
+
+}ODML_EXTENDED_AVI_HEADER;
+
 typedef struct avi_avih_chunk
 {
     unsigned char id[4];            //块ID，固定为avih
@@ -56,7 +67,7 @@ typedef struct avi_strh_chunk
     unsigned int suggest_buff_size; //读取这个流数据建议使用的缓冲区大小
     unsigned int quality;           //流数据的质量指标
     unsigned int sample_size;       //音频采样大小，视频流设为0即可
-    AVI_RECT_FRAME rcFrame;         //这个流在视频主窗口中的显示位置，设为{0,0，width,height}即可
+    // AVI_RECT_FRAME rcFrame;         //这个流在视频主窗口中的显示位置，设为{0,0，width,height}即可
 }AVI_STRH_CHUNK;
 
 /*对于视频流，strf块结构如下*/
@@ -91,8 +102,8 @@ typedef struct avi_hdrl_list
     unsigned char id[4];    //块ID，固定为LIST
     unsigned int size;      //块大小，等于struct avi_hdrl_list去掉id和size的大小
     unsigned char type[4];  //块类型，固定为hdrl
-    AVI_AVIH_CHUNK avih;
-    AVI_STRL_LIST  strl;
+    AVI_AVIH_CHUNK avih; // AVIStreamHeader
+    AVI_STRL_LIST  strl; // EXBMINFOHEADER
 }AVI_HDRL_LIST;
 
 #endif
