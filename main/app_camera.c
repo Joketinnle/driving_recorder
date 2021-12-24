@@ -18,18 +18,52 @@
 #include "sdmmc_cmd.h"
 #include "esp_vfs_fat.h"
 
+#include "jpeg2avi.h"
+
 #include "app_camera.h"
 
 #define MOUNT_POINT "/sdcard"
 
 static const char *TAG = "camera_task";
 
+
+void svaing_task(void *pvParameters)
+{
+	FILE *fp_avi;
+	uint64_t avi_count = 0;
+	int jpg_number = 120; // @todo for test
+	int i;
+	for (;;)
+	{
+		// camera_fb_t *pic = esp_camera_fb_get();
+		char *avi_file_name = malloc(19 + sizeof(int64_t));
+		sprintf(avi_file_name, "/sdcard/video_%lli.avi", avi_count);
+
+		fp_avi = fopen(avi_file_name, "wb");
+		jpeg2avi_start(fp_avi);
+		ESP_LOGI(TAG, "start recording...");
+		for (i = 0; i < jpg_number; i++)
+		{
+			camera_fb_t *pic = esp_camera_fb_get();
+			jpeg2avi_add_frame(fp_avi, pic->buf, pic->len);	
+			esp_camera_fb_return(pic);		
+		}
+		jpeg2avi_end(fp_avi, 640, 480, 24);
+		fclose(fp_avi);
+		ESP_LOGI(TAG, "record finished");
+		free(avi_file_name);
+		// vTaskDelay(10000 / portTICK_RATE_MS);
+		avi_count++;
+	}
+}
+
 void camera_task(void *pvParameters)
 {
+
 	for (;;) {
 
 		ESP_LOGI(TAG, "Taking picture...");
-        camera_fb_t *pic = esp_camera_fb_get();
+		camera_fb_t *pic = esp_camera_fb_get();
 		int64_t timestamp = esp_timer_get_time();
 
 		char *pic_name = malloc(17 + sizeof(int64_t));
@@ -38,7 +72,7 @@ void camera_task(void *pvParameters)
 		if (file != NULL)
 		{
 			size_t err = fwrite(pic->buf, 1, pic->len, file);
-			ESP_LOGI(TAG, "File saved: %s", pic_name);
+			// ESP_LOGI(TAG, "File saved: %s", pic_name);
 		}
 		else
 		{
@@ -46,14 +80,14 @@ void camera_task(void *pvParameters)
 		}
 
 
-        // use pic->buf to access the image
-        ESP_LOGI(TAG, "Picture taken! Its size was: %zu bytes", pic->len);
+		// use pic->buf to access the image
+		// ESP_LOGI(TAG, "Picture taken! Its size was: %zu bytes", pic->len);
 
 
 		fclose(file);
 		free(pic_name);
-
-        vTaskDelay(5000 / portTICK_RATE_MS);
+		esp_camera_fb_return(pic);
+		vTaskDelay(1 / portTICK_RATE_MS);
 	}
 }
 
@@ -130,9 +164,9 @@ static void camera_init()
 	config.xclk_freq_hz = 20000000;
 	config.pixel_format = PIXFORMAT_JPEG;	//YUV422,GRAYSCALE,RGB565,JPEG
 	//init with high specs to pre-allocate larger buffers
-	config.frame_size = FRAMESIZE_QSXGA;	//QQVGA-UXGA Do not use sizes above QVGA when not JPEG
-	config.jpeg_quality = 10;				//0-63 lower number means higher quality
-	config.fb_count = 1;					//if more than one, i2s runs in continuous mode.
+	config.frame_size = FRAMESIZE_VGA;//FRAMESIZE_QSXGA;	//QQVGA-UXGA Do not use sizes above QVGA when not JPEG
+	config.jpeg_quality = 10;				//0-63 lower number means higher quality default 10
+	config.fb_count = 2;					//if more than one, i2s runs in continuous mode.
 	// camera init
 	esp_err_t err = esp_camera_init(&config);
 	if (err != ESP_OK) {
@@ -148,33 +182,32 @@ static void camera_init()
 		s->set_saturation(s, -2);//lower the saturation
 	}
 	//drop down frame size for higher initial frame rate
-	s->set_framesize(s, FRAMESIZE_HD);
+	// s->set_framesize(s, FRAMESIZE_HD);
 
 }
 
 static void sdcard_init()
 {
 	esp_err_t ret;
-
-
-
-
 	esp_vfs_fat_sdmmc_mount_config_t mount_config = {
 #ifdef CONFIG_EXAMPLE_FORMAT_IF_MOUNT_FAILED
 		.format_if_mount_failed = true,
 #else
 		.format_if_mount_failed = false,
 #endif
-		.max_files = 5,
+		.max_files = 5, //5
 		.allocation_unit_size = 16 * 1024
 	};
 
 	sdmmc_card_t *card;
 	const char mount_point[] = MOUNT_POINT;
 	sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+	host.max_freq_khz = SDMMC_FREQ_52M;
+
 	sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 	slot_config.width = 4;
 	slot_config.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
+
 	ret = esp_vfs_fat_sdmmc_mount(mount_point, &host, &slot_config, &mount_config, &card);
 	if (ret != ESP_OK) {
 		if (ret == ESP_FAIL) {
@@ -188,18 +221,19 @@ static void sdcard_init()
 	}
 	ESP_LOGI(TAG, "Filesystem mounted");
 	sdmmc_card_print_info(stdout, card);
-
-
-
 }
-
 
 
 void app_camera_main()
 {
+
 	camera_init();
 	sdcard_init();
-
+	// xTaskCreatePinnedToCore(camera_task, "camera_task", 8192, NULL, 2, NULL, 0);
 	// xTaskCreate(camera_task, "camera_task", 8192, NULL, 2, NULL);
+	xTaskCreatePinnedToCore(svaing_task, "svaing_task", 102400, NULL, 2, NULL, 1);
+	// xTaskCreate(take_photo_task, "take_photo_task", 8192, NULL, 2, NULL);
+
+
 
 }
