@@ -4,8 +4,9 @@
 #include "freertos/task.h"
 
 #include "app_softap.h"
-#include "app_sdcard.h"
 #include "app_camera.h"
+
+#include "esp32/clk.h"
 
 
 
@@ -21,7 +22,7 @@ void app_main(void)
 	while (1) 
 	{
 		vTaskDelay(10000 / portTICK_PERIOD_MS);
-		printf("free heap size:%d\n", esp_get_free_heap_size());
+		printf("free heap size:%d cpu clk: %d\n", esp_get_free_heap_size(), esp_clk_xtal_freq());
 		
 	}
 }
